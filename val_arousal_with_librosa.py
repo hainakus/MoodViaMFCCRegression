@@ -116,10 +116,16 @@ def regression(features, valence_m, arousal_m):
 
 def show_for_id(song_id, valence, arousal, ids, valence_dict, arousal_dict):
     idx = ids.index(song_id)
+    plt.clf()
     plt.plot(valence_dict[song_id], arousal_dict[song_id], 'o', color='green', markersize=1)
     plt.plot(valence[idx], arousal[idx], 'o', color='blue')
-    plt.plot(sum(valence_dict[song_id])/float(len(valence_dict[song_id])), sum(arousal_dict[song_id])/float(len(arousal_dict[song_id])), arousal[idx], 'o', color='red')
-    plt.show()
+    plt.plot(sum(valence_dict[song_id])/float(len(valence_dict[song_id])), sum(arousal_dict[song_id])/float(len(arousal_dict[song_id])), 'o', color='red')
+    plt.savefig('results/' + str(song_id) + '.png')
+
+
+def plot_all(all_val, all_aro, all_ids, valence, arousal):
+    for id_s in all_ids:
+        show_for_id(id_s, all_val, all_aro, all_ids, valence, arousal)
 
 
 # y, sr = load_files('audio/101.mp3')
@@ -143,4 +149,4 @@ all_ids, all_feat = calc_features('audio/full')
 all_val = np.array(all_feat) * n_v + c_v
 all_aro = np.array(all_feat) * n_a + c_a
 
-show_for_id(536, all_val, all_aro, all_ids, valence, arousal)
+plot_all(all_val, all_aro, all_ids, valence, arousal)
