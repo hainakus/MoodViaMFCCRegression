@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 def load_files(path):
     # print 'reading audio'
     y, sr = librosa.load(path, sr=44100)
-
-    print 'red'
     return y, sr
 
 
@@ -26,7 +24,7 @@ def mfcc(path):
     # Convert to log scale (dB). We'll use the peak power as reference.
     log_S = librosa.logamplitude(S, ref_power=S.max())
 
-    mfcc_v = librosa.feature.mfcc(log_S, n_mfcc=20)
+    mfcc_v = librosa.feature.mfcc(log_S, n_mfcc=1)
 
     return mfcc_v
 
@@ -108,12 +106,12 @@ def regression(features, valence_m, arousal_m):
     y_v = np.array(valence_m)
     y_a = np.array(arousal_m)
 
-    #A = np.vstack([x]).T
+    A = np.vstack([x, np.ones(len(x))]).T
 
-    X_v = np.linalg.lstsq(x, y_v)[0]
-    X_a, c_a = np.linalg.lstsq(x, y_a)[0]
+    n_v, c_v = np.linalg.lstsq(A, y_v)[0]
+    n_a, c_a = np.linalg.lstsq(A, y_a)[0]
 
-    return X_v, X_a
+    return n_v, c_v, n_a, c_a
 
 
 def show_for_id(song_id, valence, arousal, ids, valence_dict, arousal_dict):
@@ -122,7 +120,6 @@ def show_for_id(song_id, valence, arousal, ids, valence_dict, arousal_dict):
     plt.plot(valence_dict[song_id], arousal_dict[song_id], 'o', color='green', markersize=1)
     plt.plot(valence[idx], arousal[idx], 'o', color='blue')
     plt.plot(sum(valence_dict[song_id])/float(len(valence_dict[song_id])), sum(arousal_dict[song_id])/float(len(arousal_dict[song_id])), 'o', color='red')
-    plt.axis([-1, 1, -1, 1])
     plt.savefig('results/' + str(song_id) + '.png')
 
 
@@ -143,13 +140,13 @@ train_ids, train_feat = calc_features('audio/train')
 val_mean, aro_mean = find_a_v_mens(train_ids, valence, arousal)
 
 # use regression
-X_v, X_a = regression(train_feat, val_mean, aro_mean)
+n_v, c_v, n_a, c_a = regression(train_feat, val_mean, aro_mean)
 
 # calculating features for whole dataset
 all_ids, all_feat = calc_features('audio/full')
 
 # use linera function to calculate v and a
-all_val = sum(np.array(all_feat) * X_v)
-all_aro = sum(np.array(all_feat) * X_a)
+all_val = np.array(all_feat) * n_v + c_v
+all_aro = np.array(all_feat) * n_a + c_a
 
 plot_all(all_val, all_aro, all_ids, valence, arousal)
