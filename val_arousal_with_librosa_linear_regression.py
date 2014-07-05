@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 def load_files(path):
     # print 'reading audio'
     y, sr = librosa.load(path, sr=44100)
-
     return y, sr
 
 
@@ -25,7 +24,7 @@ def mfcc(path):
     # Convert to log scale (dB). We'll use the peak power as reference.
     log_S = librosa.logamplitude(S, ref_power=S.max())
 
-    mfcc_v = librosa.feature.mfcc(log_S, n_mfcc=20)
+    mfcc_v = librosa.feature.mfcc(log_S, n_mfcc=1)
 
     return mfcc_v
 
@@ -38,16 +37,12 @@ def calc_features(path):
     print 'calcualting features for ' + path
 
     ids = []
-    fetures = np.array([])
+    fetures = []
 
     for filename in os.listdir(path):
         ids.append(int(filename[:3]))
-        mfcc_feat = mfcc(os.path.join(path, filename))
-
-        if len(fetures) == 0:
-            fetures = mfcc_feat.ravel()
-        else:
-            fetures = np.vstack((fetures, mfcc_feat.ravel()))
+        mfcc_feat = mfcc(os.path.join(path, filename))[0]
+        fetures.append(sum(mfcc_feat) / float(len(mfcc_feat)))
 
     return ids, fetures
 
@@ -111,16 +106,12 @@ def regression(features, valence_m, arousal_m):
     y_v = np.array(valence_m)
     y_a = np.array(arousal_m)
 
-    # print x
+    A = np.vstack([x, np.ones(len(x))]).T
 
-    # A = np.vstack([x]).T
+    n_v, c_v = np.linalg.lstsq(A, y_v)[0]
+    n_a, c_a = np.linalg.lstsq(A, y_a)[0]
 
-    # print x
-
-    X_v = np.linalg.lstsq(x, y_v)[0]
-    X_a = np.linalg.lstsq(x, y_a)[0]
-
-    return X_v, X_a
+    return n_v, c_v, n_a, c_a
 
 
 def show_for_id(song_id, valence, arousal, ids, valence_dict, arousal_dict):
@@ -129,7 +120,6 @@ def show_for_id(song_id, valence, arousal, ids, valence_dict, arousal_dict):
     plt.plot(valence_dict[song_id], arousal_dict[song_id], 'o', color='green', markersize=1)
     plt.plot(valence[idx], arousal[idx], 'o', color='blue')
     plt.plot(sum(valence_dict[song_id])/float(len(valence_dict[song_id])), sum(arousal_dict[song_id])/float(len(arousal_dict[song_id])), 'o', color='red')
-    plt.axis([-1, 1, -1, 1])
     plt.savefig('results/' + str(song_id) + '.png')
 
 
@@ -150,17 +140,13 @@ train_ids, train_feat = calc_features('audio/train')
 val_mean, aro_mean = find_a_v_mens(train_ids, valence, arousal)
 
 # use regression
-X_v, X_a = regression(train_feat, val_mean, aro_mean)
+n_v, c_v, n_a, c_a = regression(train_feat, val_mean, aro_mean)
 
 # calculating features for whole dataset
 all_ids, all_feat = calc_features('audio/full')
-#print all_feat.shape
 
 # use linera function to calculate v and a
-all_val = np.sum(np.array(all_feat) * X_v, axis=1)
-all_aro = np.sum(all_feat * X_a, axis=1)
-
-#print all_val.shape
-#print all_aro.shape
+all_val = np.array(all_feat) * n_v + c_v
+all_aro = np.array(all_feat) * n_a + c_a
 
 plot_all(all_val, all_aro, all_ids, valence, arousal)
