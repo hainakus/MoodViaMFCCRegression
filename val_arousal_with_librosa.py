@@ -1,5 +1,10 @@
 import os
-import librosa
+from librosa import(
+    feature,
+    logamplitude,
+    feature,
+    load
+    )
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,7 +12,7 @@ import matplotlib.pyplot as plt
 
 def load_files(path):
     # print 'reading audio'
-    y, sr = librosa.load(path, sr=44100)
+    y, sr = load(path, sr=44100)
 
     return y, sr
 
@@ -20,14 +25,14 @@ def mfcc(path):
     y, sr = load_files(path)
 
     print 'claculating mfcc ' + path
-    S = librosa.feature.melspectrogram(y, sr=sr, n_fft=2048, hop_length=64, n_mels=128)
-
+    S = feature.melspectrogram(y, sr=sr, n_fft=2048, hop_length=64, n_mels=128)
+    
     # Convert to log scale (dB). We'll use the peak power as reference.
-    log_S = librosa.logamplitude(S, ref_power=S.max())
+    log_S = logamplitude(S, ref_power=np.max)
 
-    mfcc_v = librosa.feature.mfcc(log_S, n_mfcc=20)
+    mfcc_v = feature.mfcc(S=log_S, n_mfcc=20)
 
-    return mfcc_v
+    return np.sum(mfcc_v, axis=1)
 
 
 def calc_features(path):
