@@ -8,20 +8,21 @@ files = dir('*.mat');
 
 for i = 1:length(files)
     name = files(i).name
-    load(strcat('C:/Users/Primoz/Desktop/mslite/msLiteFeatures/', name));
+    load(name)  %C:/Users/Primoz/Desktop/mslite/msLiteFeatures/'
     
     % get mena of mfccs
     % return 20x1 matrix
     mfcc = mean(features.ceps, 2);
     
     
-    datas = [datas; mfcc']
+    datas = [datas; mfcc'];
 end
-size(datas)
+
 fid = fopen('mfccs','w');
 for i = 1:length(files)
-    name = files(i).name
-    fprintf(fid,'%s %f',name,datas(i,:));
-   	fprintf(fid, '\n')
+    name = files(i).name;
+    fprintf(fid,'%s ',name);
+    fprintf(fid, '%.10f ', datas(i,:));
+   	fprintf(fid, '\n');
 end
 fclose(fid)

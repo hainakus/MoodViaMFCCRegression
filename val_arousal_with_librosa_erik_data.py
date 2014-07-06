@@ -40,19 +40,24 @@ def calc_features(path):
     function calcuates features for all song in songs
     returns mean for each song and songs id
     '''
-    print 'calcualting features for ' + path
+    print 'reading features for ' + path
 
     ids = []
     fetures = np.array([])
 
-    for filename in os.listdir(path):
-        ids.append(int(filename[:3]))
-        mfcc_feat = mfcc(os.path.join(path, filename))
-        print fetures
-        if len(fetures) == 0:
-            fetures = mfcc_feat.ravel()
-        else:
-            fetures = np.vstack((fetures, mfcc_feat.ravel()))
+    with open('eric_dataset/mfccs', 'r') as f:
+        for line in f:
+            linesp = line.split()
+            ids.append(int(linesp[0][:-4]))
+            mfccs = []
+
+            for word in linesp[1:]:
+                mfccs.append(float(word))
+
+            if len(fetures) == 0:
+                fetures = (np.array(mfccs)).ravel()
+            else:
+                fetures = np.vstack((fetures, np.array(mfccs)))
 
     return ids, fetures
 
@@ -151,6 +156,12 @@ valence, arousal = csv_2_dict('csv/survery2data.csv')
 # calculate fetures for song in train set
 train_ids, train_feat = calc_features('audio/train')
 
+train_ids = train_ids[0::4]
+train_feat = train_feat[0::4]
+print len(train_ids)
+print train_feat.shape
+
+exit()
 # calcultae valence and arousal find_a_v_mens
 val_mean, aro_mean = find_a_v_mens(train_ids, valence, arousal)
 
