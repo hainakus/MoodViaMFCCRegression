@@ -59,7 +59,7 @@ def read_csv_song_features(path):
     return ids, features
 
 
-def read_eric_va(path):
+def read_eric_va(pathv, patha):
     '''
     Function creates 2 dictionaries for valence and arousal
     for each song in csv
@@ -70,7 +70,10 @@ def read_eric_va(path):
     print 'rendering csv file'
 
     # read csv
-    ifile = open(path, "rb")
+    ifilev = open(pathv, "rb")
+    ifilea = open(patha, "rb")
+    valcsv = csv.reader(ifilev)
+    arocsv = csv.reader(ifilea)
 
     # dict: key => song id,
     # value => array of valence (1.dict) arousal (2. dict)
@@ -78,15 +81,18 @@ def read_eric_va(path):
     aro = {}
 
     # parse csv
-    for row in ifile:
+    for row in valcsv:
         # print row[81]
-        rows = row.split()
-        key = int(rows[0])
 
-        val[key] = []
-        aro[key] = []
+        key = int(row[0])
 
-        val[key].append(float(rows[1]))
-        aro[key].append(float(rows[2]))
+        val[key] = map(float, row[1:])
+
+    for row in arocsv:
+        # print row[81]
+
+        key = int(row[0])
+
+        aro[key] = map(float, row[1:])
 
     return val, aro

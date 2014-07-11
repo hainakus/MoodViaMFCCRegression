@@ -25,7 +25,7 @@ import numpy as np
 # y, sr = load_files('audio/101.mp3')
 # mfcc_v = mfcc(y, sr)
 # get exsisting valence and arousal data
-valence, arousal = read_eric_va('eric_dataset/val_arousal')
+valence, arousal = read_eric_va('eric_dataset/valence.csv', 'eric_dataset/arousal.csv')
 
 # calculate fetures for song in train set
 ids, features = read_csv_song_features('eric_dataset/chroma.csv')

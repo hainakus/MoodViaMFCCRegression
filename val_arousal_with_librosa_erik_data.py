@@ -10,6 +10,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
+from utils.read import read_eric_va
+
 
 def load_files(path):
     # print 'reading audio'
@@ -189,7 +191,7 @@ def no_stdev_average(valence_calc, arousal_calc, valence_mean, arousal_mean, val
 # y, sr = load_files('audio/101.mp3')
 # mfcc_v = mfcc(y, sr)
 # get exsisting valence and arousal data
-valence, arousal = csv_2_dict('eric_dataset/val_arousal')
+valence, arousal = read_eric_va('eric_dataset/valence.csv', 'eric_dataset/arousal.csv')
 
 # calculate fetures for song in train set
 train_ids, train_feat = calc_features('audio/train')
@@ -220,4 +222,4 @@ all_aro = np.sum(all_feat * X_a, axis=1)
 
 print 'Average distance: ' + str(average_distance(all_val, all_aro, valence, arousal, all_ids)) 
 print 'Nearest distance: ' + str(nearest_dist_average(all_val, all_aro, valence, arousal, all_ids)) 
-#print 'Nearest distance: ' + str(no_stdev_average(all_val, all_aro, val_mean, aro_mean, valence, arousal, all_ids)) 
+print 'Nearest distance: ' + str(no_stdev_average(all_val, all_aro, val_mean, aro_mean, valence, arousal, all_ids)) 
