@@ -8,6 +8,7 @@ from librosa import(
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 
 def load_files(path):
@@ -31,8 +32,8 @@ def mfcc(path):
     log_S = logamplitude(S, ref_power=np.max)
 
     mfcc_v = feature.mfcc(S=log_S, n_mfcc=20)
-
-    return np.sum(mfcc_v, axis=1)
+    
+    return np.sum(mfcc_v, axis=1)/mfcc_v.shape[1]
 
 
 def calc_features(path):
@@ -44,15 +45,18 @@ def calc_features(path):
 
     ids = []
     fetures = np.array([])
+    i = 0
 
     for filename in os.listdir(path):
         ids.append(int(filename[:3]))
         mfcc_feat = mfcc(os.path.join(path, filename))
-        print fetures
+        # print fetures
         if len(fetures) == 0:
             fetures = mfcc_feat.ravel()
         else:
             fetures = np.vstack((fetures, mfcc_feat.ravel()))
+        print i
+        i += 1
 
     return ids, fetures
 
@@ -84,7 +88,7 @@ def csv_2_dict(path):
             val[key] = []
             aro[key] = []
 
-        for i in range(82, 129, 2):
+        for i in range(82+20, 129, 2):
             if float(row[i]) != 9:
                 val[key].append(float(row[i]))
                 aro[key].append(float(row[i+1]))
@@ -116,12 +120,6 @@ def regression(features, valence_m, arousal_m):
     y_v = np.array(valence_m)
     y_a = np.array(arousal_m)
 
-    # print x
-
-    # A = np.vstack([x]).T
-
-    # print x
-
     X_v = np.linalg.lstsq(x, y_v)[0]
     X_a = np.linalg.lstsq(x, y_a)[0]
 
@@ -143,10 +141,49 @@ def plot_all(all_val, all_aro, all_ids, valence, arousal):
         show_for_id(id_s, all_val, all_aro, all_ids, valence, arousal)
 
 
+def average_distance(valence_calc, arousal_calc, valence, arousal, ids):
+    '''
+    calculates average distace from mesured averages and calcualted averages
+    '''
+    sum = 0
+    for i in range(len(ids)):
+        sum += math.sqrt(math.pow(valence_calc[i] - np.mean(valence[ids[i]]), 2) + math.pow(arousal_calc[i] - np.mean(arousal[ids[i]]), 2))
+
+    return sum/float(len(ids))
+
+
+def nearest_dist_average(valence_calc, arousal_calc, valence, arousal, ids):
+    '''
+    claculates average distance to nearest song
+    '''
+    sum=0
+    for i in range(len(ids)):
+        min_dist = 9 # this is value greater than all distances
+        for j in range(len(valence[ids[i]])):
+            dist = math.sqrt(math.pow(valence_calc[i] - valence[ids[i]][j], 2) + math.pow(arousal_calc[i] - arousal[ids[i]][j], 2))
+            min_dist = dist if min_dist > dist else min_dist
+        sum += min_dist
+
+    return sum/float(len(ids))
+
+
+def no_stdev_average(valence_calc, arousal_calc, valence_mean, arousal_mean, valence, arousal, ids):
+    '''
+    calculates aveerage factor claculated deistance / no_stdev_average
+    '''
+    sum = 0
+    for i in range(len(ids)):
+        distance = math.sqrt(math.pow(valence_calc[i] - np.mean(valence[ids[i]]), 2) + math.pow(arousal_calc[i] - np.mean(arousal[ids[i]]), 2))
+        stdev = (np.std(valence[ids[i]]) + np.std(arousal[ids[i]])) / 2
+        sum += math.sqrt(math.pow(valence_calc[i] - np.mean(valence[ids[i]]), 2) + math.pow(arousal_calc[i] - np.mean(arousal[ids[i]]), 2))/stdev
+
+    return sum/float(len(ids))
+
+
 # y, sr = load_files('audio/101.mp3')
 # mfcc_v = mfcc(y, sr)
 # get exsisting valence and arousal data
-valence, arousal = csv_2_dict('csv/survery2data.csv')
+valence, arousal = csv_2_dict('csv/survery2dataMin1.csv')
 
 # calculate fetures for song in train set
 train_ids, train_feat = calc_features('audio/train')
@@ -169,3 +206,7 @@ all_aro = np.sum(all_feat * X_a, axis=1)
 #print all_aro.shape
 
 plot_all(all_val, all_aro, all_ids, valence, arousal)
+
+print 'Average distance: ' + str(average_distance(all_val, all_aro, valence, arousal, all_ids)) 
+print 'Nearest distance: ' + str(nearest_dist_average(all_val, all_aro, valence, arousal, all_ids)) 
+print 'Nearest distance: ' + str(no_stdev_average(all_val, all_aro, val_mean, aro_mean, valence, arousal, all_ids)) 

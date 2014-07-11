@@ -8,6 +8,7 @@ from librosa import(
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 
 def load_files(path):
@@ -31,7 +32,7 @@ def mfcc(path):
     log_S = logamplitude(S, ref_power=np.max)
 
     mfcc_v = feature.mfcc(S=log_S, n_mfcc=20)
-
+    
     return np.sum(mfcc_v, axis=1)
 
 
@@ -74,7 +75,6 @@ def csv_2_dict(path):
 
     # read csv
     ifile = open(path, "rb")
-    reader = csv.reader(ifile)
 
     # dict: key => song id,
     # value => array of valence (1.dict) arousal (2. dict)
@@ -82,17 +82,16 @@ def csv_2_dict(path):
     aro = {}
 
     # parse csv
-    for row in reader:
+    for row in ifile:
         # print row[81]
-        key = int(row[81])
-        if key not in val:
-            val[key] = []
-            aro[key] = []
+        rows = row.split()
+        key = int(rows[0])
 
-        for i in range(82, 129, 2):
-            if float(row[i]) != 9:
-                val[key].append(float(row[i]))
-                aro[key].append(float(row[i+1]))
+        val[key] = []
+        aro[key] = []
+
+        val[key].append(float(rows[1]))
+        aro[key].append(float(rows[2]))
 
     return val, aro
 
@@ -148,20 +147,56 @@ def plot_all(all_val, all_aro, all_ids, valence, arousal):
         show_for_id(id_s, all_val, all_aro, all_ids, valence, arousal)
 
 
+def average_distance(valence_calc, arousal_calc, valence, arousal, ids):
+    '''
+    calculates average distace from mesured averages and calcualted averages
+    '''
+    sum = 0
+    for i in range(len(ids)):
+        sum += math.sqrt(math.pow(valence_calc[i] - np.mean(valence[ids[i]]), 2) + math.pow(arousal_calc[i] - np.mean(arousal[ids[i]]), 2))
+
+    return sum/float(len(ids))
+
+
+def nearest_dist_average(valence_calc, arousal_calc, valence, arousal, ids):
+    '''
+    claculates average distance to nearest song
+    '''
+    sum=0
+    for i in range(len(ids)):
+        min_dist = 9 # this is value greater than all distances
+        for j in range(len(valence[ids[i]])):
+            dist = math.sqrt(math.pow(valence_calc[i] - valence[ids[i]][j], 2) + math.pow(arousal_calc[i] - arousal[ids[i]][j], 2))
+            min_dist = dist if min_dist > dist else min_dist
+        sum += min_dist
+
+    return sum/float(len(ids))
+
+
+def no_stdev_average(valence_calc, arousal_calc, valence_mean, arousal_mean, valence, arousal, ids):
+    '''
+    calculates aveerage factor claculated deistance / no_stdev_average
+    '''
+    sum = 0
+    for i in range(len(ids)):
+        distance = math.sqrt(math.pow(valence_calc[i] - np.mean(valence[ids[i]]), 2) + math.pow(arousal_calc[i] - np.mean(arousal[ids[i]]), 2))
+        stdev = (np.std(valence[ids[i]]) + np.std(arousal[ids[i]])) / 2
+        sum += math.sqrt(math.pow(valence_calc[i] - np.mean(valence[ids[i]]), 2) + math.pow(arousal_calc[i] - np.mean(arousal[ids[i]]), 2))/stdev
+
+    return sum/float(len(ids))
+
+
 # y, sr = load_files('audio/101.mp3')
 # mfcc_v = mfcc(y, sr)
 # get exsisting valence and arousal data
-valence, arousal = csv_2_dict('csv/survery2data.csv')
+valence, arousal = csv_2_dict('eric_dataset/val_arousal')
 
 # calculate fetures for song in train set
 train_ids, train_feat = calc_features('audio/train')
 
 train_ids = train_ids[0::4]
 train_feat = train_feat[0::4]
-print len(train_ids)
-print train_feat.shape
 
-exit()
 # calcultae valence and arousal find_a_v_mens
 val_mean, aro_mean = find_a_v_mens(train_ids, valence, arousal)
 
@@ -170,6 +205,7 @@ X_v, X_a = regression(train_feat, val_mean, aro_mean)
 
 # calculating features for whole dataset
 all_ids, all_feat = calc_features('audio/full')
+
 #print all_feat.shape
 
 # use linera function to calculate v and a
@@ -179,4 +215,9 @@ all_aro = np.sum(all_feat * X_a, axis=1)
 #print all_val.shape
 #print all_aro.shape
 
-plot_all(all_val, all_aro, all_ids, valence, arousal)
+#plot_all(all_val, all_aro, all_ids, valence, arousal)
+
+
+print 'Average distance: ' + str(average_distance(all_val, all_aro, valence, arousal, all_ids)) 
+print 'Nearest distance: ' + str(nearest_dist_average(all_val, all_aro, valence, arousal, all_ids)) 
+#print 'Nearest distance: ' + str(no_stdev_average(all_val, all_aro, val_mean, aro_mean, valence, arousal, all_ids)) 
