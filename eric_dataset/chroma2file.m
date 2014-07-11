@@ -21,8 +21,11 @@ size(data)
 fid = fopen('chroma.csv','w');
 for i = 1:length(files)
     name = files(i).name;
-    fprintf(fid,'%s,',name,data(i,:));
-    fprintf(fid,'%f,',name,data(i,:));
+    fprintf(fid,'%s',name);
+    for j = data(i,:)
+        fprintf(fid,',');
+        fprintf(fid,'%f', j);
+    end
    	fprintf(fid, '\n');
 end
 fclose(fid)

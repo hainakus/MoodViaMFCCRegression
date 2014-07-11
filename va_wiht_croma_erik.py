@@ -2,7 +2,9 @@ from feature_extract.features import(
 	calc_chroma_features
 )
 from utils.read import(
-	csv_2_dict_va
+	csv_2_dict_va,
+	read_csv_song_features, 
+	read_eric_va
 )
 
 from utils.calc_utils import(
@@ -23,10 +25,12 @@ import numpy as np
 # y, sr = load_files('audio/101.mp3')
 # mfcc_v = mfcc(y, sr)
 # get exsisting valence and arousal data
-valence, arousal = csv_2_dict_va('csv/survery2dataMin1.csv')
+valence, arousal = read_eric_va('eric_dataset/val_arousal')
 
 # calculate fetures for song in train set
-train_ids, train_feat = calc_chroma_features('audio/train')
+ids, features = read_csv_song_features('eric_dataset/chroma.csv')
+
+train_ids, train_feat = ids[0::4], features[0::4]
 
 # calcultae valence and arousal find_a_v_mens
 val_mean, aro_mean = find_a_v_mens_va(train_ids, valence, arousal)
@@ -35,10 +39,10 @@ val_mean, aro_mean = find_a_v_mens_va(train_ids, valence, arousal)
 X_v, X_a = regression(train_feat, val_mean, aro_mean)
 
 # calculating features for whole dataset
-all_ids, all_feat = calc_chroma_features('audio/full')
+all_ids, all_feat = ids, features
 #print all_feat.shape
 
-# use linera function to calculate v and a
+# use regresion function to calculate v and a
 all_val = np.sum(np.array(all_feat) * X_v, axis=1)
 all_aro = np.sum(all_feat * X_a, axis=1)
 
