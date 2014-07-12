@@ -60,6 +60,24 @@ def read_csv_song_features(path):
     return ids, features
 
 
+def read_csv_song_features_dict(path):
+    ifile = open(path, "rb")
+    reader = csv.reader(ifile)
+
+    ids = []
+    features = {}
+
+    for row in reader:
+        key = int(row[0][0:-4])
+        ids.append(key)
+
+        #print row[1:]
+
+        features[key] = [float(x) for x in row[1:]]
+
+    return ids, features
+
+
 def read_eric_va(pathv, patha):
     '''
     Function creates 2 dictionaries for valence and arousal
@@ -110,18 +128,16 @@ def single_fake_chroma_read(path):
 def read_fake_chroma(path):
 
     ids = []
-    features = np.array([])
+    features = {}
     i = 0
 
     for filename in os.listdir(path):
-        ids.append(int(filename[:3]))
+        key = int(filename[:3])
+        ids.append(key)
         vector = single_fake_chroma_read(os.path.join(path, filename))
         # print fetures
-        if len(features) == 0:
-            features = vector.ravel()
-        else:
-            features = np.vstack((features, vector.ravel()))
-        print i
+        features[key] = vector
+
         i += 1
 
     return ids, features

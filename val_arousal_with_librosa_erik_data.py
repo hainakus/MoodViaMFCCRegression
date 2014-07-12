@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import math
 
 from utils.read import read_eric_va
+from utils.calc_utils import find_in_dict
+import random
 
 
 def load_files(path):
@@ -46,23 +48,21 @@ def calc_features(path):
     print 'reading features for ' + path
 
     ids = []
-    fetures = np.array([])
+    features = {}
 
     with open('eric_dataset/mfccs', 'r') as f:
         for line in f:
             linesp = line.split()
-            ids.append(int(linesp[0][:-4]))
-            mfccs = []
+            key = int(linesp[0][:-4])
+            ids.append(key)
+            feat = []
 
             for word in linesp[1:]:
-                mfccs.append(float(word))
+                feat.append(float(word))
 
-            if len(fetures) == 0:
-                fetures = (np.array(mfccs)).ravel()
-            else:
-                fetures = np.vstack((fetures, np.array(mfccs)))
+            features[key] = feat
 
-    return ids, fetures
+    return ids, features
 
 
 def csv_2_dict(path):
@@ -194,25 +194,28 @@ def no_stdev_average(valence_calc, arousal_calc, valence_mean, arousal_mean, val
 valence, arousal = read_eric_va('eric_dataset/valence.csv', 'eric_dataset/arousal.csv')
 
 # calculate fetures for song in train set
-train_ids, train_feat = calc_features('audio/train')
-
-train_ids = train_ids[0::4]
-train_feat = train_feat[0::4]
+ids, feat = calc_features('audio/train')
+train_ids = ids
+random.shuffle(train_ids)
+all_ids = train_ids[168:]
+train_ids = train_ids[0:167]
 
 # calcultae valence and arousal find_a_v_mens
 val_mean, aro_mean = find_a_v_mens(train_ids, valence, arousal)
+train_feat = find_in_dict(feat, train_ids)
+test_feat = find_in_dict(feat, all_ids)
 
 # use regression
 X_v, X_a = regression(train_feat, val_mean, aro_mean)
 
 # calculating features for whole dataset
-all_ids, all_feat = calc_features('audio/full')
+# all_ids, all_feat = calc_features('audio/full')
 
 #print all_feat.shape
 
 # use linera function to calculate v and a
-all_val = np.sum(np.array(all_feat) * X_v, axis=1)
-all_aro = np.sum(all_feat * X_a, axis=1)
+all_val = np.sum(np.array(test_feat) * X_v, axis=1)
+all_aro = np.sum(test_feat * X_a, axis=1)
 
 #print all_val.shape
 #print all_aro.shape
