@@ -9,6 +9,8 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+import random
+from utils.calc_utils import find_in_dict
 
 
 def load_files(path):
@@ -44,17 +46,15 @@ def calc_features(path):
     print 'calcualting features for ' + path
 
     ids = []
-    fetures = np.array([])
+    fetures = {}
     i = 0
 
     for filename in os.listdir(path):
-        ids.append(int(filename[:3]))
+        key = int(filename[:3])
+        ids.append(key)
         mfcc_feat = mfcc(os.path.join(path, filename))
         # print fetures
-        if len(fetures) == 0:
-            fetures = mfcc_feat.ravel()
-        else:
-            fetures = np.vstack((fetures, mfcc_feat.ravel()))
+        fetures[key] = mfcc_feat
         print i
         i += 1
 
@@ -185,27 +185,31 @@ def no_stdev_average(valence_calc, arousal_calc, valence_mean, arousal_mean, val
 # get exsisting valence and arousal data
 valence, arousal = csv_2_dict('csv/survery2dataMin1.csv')
 
-# calculate fetures for song in train set
-train_ids, train_feat = calc_features('audio/train')
+ids, feat = calc_features('audio/full')
+train_ids = ids
+random.shuffle(train_ids)
+all_ids = train_ids[141:]
+train_ids = train_ids[0:140]
 
 # calcultae valence and arousal find_a_v_mens
 val_mean, aro_mean = find_a_v_mens(train_ids, valence, arousal)
+train_feat = find_in_dict(feat, train_ids)
+test_feat = find_in_dict(feat, all_ids)
 
 # use regression
 X_v, X_a = regression(train_feat, val_mean, aro_mean)
 
 # calculating features for whole dataset
-all_ids, all_feat = calc_features('audio/full')
 #print all_feat.shape
 
 # use linera function to calculate v and a
-all_val = np.sum(np.array(all_feat) * X_v, axis=1)
-all_aro = np.sum(all_feat * X_a, axis=1)
+all_val = np.sum(np.array(test_feat) * X_v, axis=1)
+all_aro = np.sum(test_feat * X_a, axis=1)
 
 #print all_val.shape
 #print all_aro.shape
 
-plot_all(all_val, all_aro, all_ids, valence, arousal)
+#plot_all(all_val, all_aro, all_ids, valence, arousal)
 
 print 'Average distance: ' + str(average_distance(all_val, all_aro, valence, arousal, all_ids)) 
 print 'Nearest distance: ' + str(nearest_dist_average(all_val, all_aro, valence, arousal, all_ids)) 

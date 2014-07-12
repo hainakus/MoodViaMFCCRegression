@@ -1,5 +1,6 @@
 import csv
 import numpy as np
+import os
 
 
 def csv_2_dict_va(path):
@@ -96,3 +97,31 @@ def read_eric_va(pathv, patha):
         aro[key] = map(float, row[1:])
 
     return val, aro
+
+
+def single_fake_chroma_read(path):
+    ifile = open(path, "rb")
+    reader = csv.reader(ifile)
+    x = list(reader)
+    features = np.array(x).astype('float')
+    return np.mean(features, axis=0)
+
+
+def read_fake_chroma(path):
+
+    ids = []
+    features = np.array([])
+    i = 0
+
+    for filename in os.listdir(path):
+        ids.append(int(filename[:3]))
+        vector = single_fake_chroma_read(os.path.join(path, filename))
+        # print fetures
+        if len(features) == 0:
+            features = vector.ravel()
+        else:
+            features = np.vstack((features, vector.ravel()))
+        print i
+        i += 1
+
+    return ids, features

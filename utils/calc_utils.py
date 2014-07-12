@@ -68,4 +68,15 @@ def no_stdev_average_va(valence_calc, arousal_calc, valence_mean, arousal_mean, 
         sum += math.sqrt(math.pow(valence_calc[i] - np.mean(valence[ids[i]]), 2) + math.pow(arousal_calc[i] - np.mean(arousal[ids[i]]), 2))/stdev
 
     return sum/float(len(ids))
-    
+
+
+def find_in_dict(dict, ids):
+
+    results = np.array([])
+    for idx in ids:
+        if len(results) == 0:
+            results = (np.array(dict[idx])).ravel()
+        else:
+            results = np.vstack((results, np.array(dict[idx])))
+
+    return results
