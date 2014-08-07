@@ -31,7 +31,7 @@ def csv_2_dict_va(path):
             aro[key] = []
 
         for i in range(82+20, 129, 2):
-            if float(row[i]) != 9:
+            if float(row[i]) <= 1 and float(row[i+1]) <= 1:
                 val[key].append(float(row[i]))
                 aro[key].append(float(row[i+1]))
 

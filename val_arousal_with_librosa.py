@@ -5,12 +5,14 @@ from librosa import(
     feature,
     load
     )
+from utils.plot import plot_all_va
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
 import math
 import random
 from utils.calc_utils import find_in_dict
+import sys
 
 
 def load_files(path):
@@ -33,7 +35,7 @@ def mfcc(path):
     # Convert to log scale (dB). We'll use the peak power as reference.
     log_S = logamplitude(S, ref_power=np.max)
 
-    mfcc_v = feature.mfcc(S=log_S, n_mfcc=20)
+    mfcc_v = feature.mfcc(S=log_S, n_mfcc=14)
     
     return np.sum(mfcc_v, axis=1)/mfcc_v.shape[1]
 
@@ -152,6 +154,27 @@ def average_distance(valence_calc, arousal_calc, valence, arousal, ids):
     return sum/float(len(ids))
 
 
+def valence_distance(valence_calc, arousal_calc, valence, arousal, ids):
+    '''
+    calculates average distace from mesured averages and calcualted averages
+    '''
+    sum = 0
+    for i in range(len(ids)):
+        sum += abs(valence_calc[i] - np.mean(valence[ids[i]]))
+    return sum/float(len(ids))
+
+
+def arousal_distance(valence_calc, arousal_calc, valence, arousal, ids):
+    '''
+    calculates average distace from mesured averages and calcualted averages
+    '''
+    sum = 0
+    for i in range(len(ids)):
+        sum += abs(arousal_calc[i] - np.mean(arousal[ids[i]]))
+
+    return sum/float(len(ids))
+
+
 def nearest_dist_average(valence_calc, arousal_calc, valence, arousal, ids):
     '''
     claculates average distance to nearest song
@@ -186,31 +209,69 @@ def no_stdev_average(valence_calc, arousal_calc, valence_mean, arousal_mean, val
 valence, arousal = csv_2_dict('csv/survery2dataMin1.csv')
 
 ids, feat = calc_features('audio/full')
-train_ids = ids
-random.shuffle(train_ids)
-all_ids = train_ids[141:]
-train_ids = train_ids[0:140]
+# repeate 50 times and take the best
 
-# calcultae valence and arousal find_a_v_mens
-val_mean, aro_mean = find_a_v_mens(train_ids, valence, arousal)
-train_feat = find_in_dict(feat, train_ids)
-test_feat = find_in_dict(feat, all_ids)
+best_avg = sys.maxint
+best_near = sys.maxint
+best_std = sys.maxint
 
-# use regression
-X_v, X_a = regression(train_feat, val_mean, aro_mean)
+best_val = sys.maxint 
+best_aro = sys.maxint
 
-# calculating features for whole dataset
-#print all_feat.shape
+for i in range(50):
+    train_ids = ids
+    random.shuffle(train_ids)
+    all_ids = train_ids[141:]
+    train_ids = train_ids[0:140]
 
-# use linera function to calculate v and a
-all_val = np.sum(np.array(test_feat) * X_v, axis=1)
-all_aro = np.sum(test_feat * X_a, axis=1)
+    # calcultae valence and arousal find_a_v_mens
+    val_mean, aro_mean = find_a_v_mens(train_ids, valence, arousal)
+    train_feat = find_in_dict(feat, train_ids)
+    test_feat = find_in_dict(feat, all_ids)
 
-#print all_val.shape
-#print all_aro.shape
+    # use regression
+    X_v, X_a = regression(train_feat, val_mean, aro_mean)
 
-#plot_all(all_val, all_aro, all_ids, valence, arousal)
+    # calculating features for whole dataset
+    #print all_feat.shape
 
-print 'Average distance: ' + str(average_distance(all_val, all_aro, valence, arousal, all_ids)) 
-print 'Nearest distance: ' + str(nearest_dist_average(all_val, all_aro, valence, arousal, all_ids)) 
-print 'Nearest distance: ' + str(no_stdev_average(all_val, all_aro, val_mean, aro_mean, valence, arousal, all_ids)) 
+    # use linera function to calculate v and a
+    all_val = np.sum(np.array(test_feat) * X_v, axis=1)
+    all_aro = np.sum(test_feat * X_a, axis=1)
+
+    #print all_val.shape
+    #print all_aro.shape
+
+    #plot_all(all_val, all_aro, all_ids, valence, arousal)
+    print "ATTEMPT" + str(i)
+    avg = average_distance(all_val, all_aro, valence, arousal, all_ids)
+    nearest = nearest_dist_average(all_val, all_aro, valence, arousal, all_ids)
+    standdev = no_stdev_average(all_val, all_aro, val_mean, aro_mean, valence, arousal, all_ids)
+
+    valence_dist = valence_distance(all_val, all_aro, valence, arousal, all_ids)
+    arousal_dist = arousal_distance(all_val, all_aro, valence, arousal, all_ids)
+
+    print 'Average distance: ' + str(avg) 
+    print 'Nearest distance: ' + str(nearest) 
+    print 'Nearest distance: ' + str(standdev) 
+
+    if avg < best_avg:
+        best_avg = avg
+        best_near = nearest
+        best_std = standdev
+
+    if best_val > valence_dist:
+        best_val = valence_dist
+
+    if best_aro > arousal_dist:
+        best_aro = arousal_dist
+
+plot_all_va(all_val, all_aro, all_ids, valence, arousal)
+
+print "BEST"
+print 'Average distance: ' + str(best_avg)
+print 'Nearest distance: ' + str(best_near)
+print 'Std distance: ' + str(best_std)
+
+print best_val
+print best_aro

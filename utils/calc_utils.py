@@ -1,5 +1,13 @@
 import numpy as np
 import math
+import os
+
+from librosa import(
+    feature,
+    logamplitude,
+    feature,
+    load
+    )
 
 def find_a_v_mens_va(ids, val, aro):
     '''
@@ -42,6 +50,27 @@ def average_distance_va(valence_calc, arousal_calc, valence, arousal, ids):
     return sum/float(len(ids))
 
 
+def valence_distance_va(valence_calc, arousal_calc, valence, arousal, ids):
+    '''
+    calculates average distace from mesured averages and calcualted averages
+    '''
+    sum = 0
+    for i in range(len(ids)):
+        sum += abs(valence_calc[i] - np.mean(valence[ids[i]]))
+    return sum/float(len(ids))
+
+
+def arousal_distance_va(valence_calc, arousal_calc, valence, arousal, ids):
+    '''
+    calculates average distace from mesured averages and calcualted averages
+    '''
+    sum = 0
+    for i in range(len(ids)):
+        sum += abs(arousal_calc[i] - np.mean(arousal[ids[i]]))
+
+    return sum/float(len(ids))
+
+
 def nearest_dist_average_va(valence_calc, arousal_calc, valence, arousal, ids):
     '''
     claculates average distance to nearest song
@@ -80,3 +109,48 @@ def find_in_dict(dict, ids):
             results = np.vstack((results, np.array(dict[idx])))
 
     return results
+
+def mfcc(path):
+    # Let's make and display a mel-scaled power (energy-squared) spectrogram
+    # We use a small hop length of 64 here so that the
+    # frames line up with the beat tracker example below.
+
+    y, sr = load_files(path)
+
+    print 'claculating mfcc ' + path
+    S = feature.melspectrogram(y, sr=sr, n_fft=2048, hop_length=64, n_mels=128)
+    
+    # Convert to log scale (dB). We'll use the peak power as reference.
+    log_S = logamplitude(S, ref_power=np.max)
+    mfcc_v = feature.mfcc(S=log_S, n_mfcc=14)
+    
+    return np.sum(mfcc_v, axis=1)/mfcc_v.shape[1]
+
+
+def load_files(path):
+    # print 'reading audio'
+    y, sr = load(path, sr=44100)
+
+    return y, sr
+
+def calc_mfcc_features(path):
+    '''
+    function calcuates features for all song in songs
+    returns mean for each song and songs id
+    '''
+    print 'calcualting features for ' + path
+
+    ids = []
+    fetures = {}
+    i = 0
+
+    for filename in os.listdir(path):
+        key = int(filename[:3])
+        ids.append(key)
+        mfcc_feat = mfcc(os.path.join(path, filename))
+        # print fetures
+        fetures[key] = mfcc_feat
+        print i
+        i += 1
+
+    return ids, fetures
