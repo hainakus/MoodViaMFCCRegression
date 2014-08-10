@@ -1,6 +1,7 @@
 from feature_extract.features import(
 	calc_chroma_features,
-	calc_chroma_features_dict
+	calc_chroma_features_dict,
+	calc_mfcc_features_dict
 )
 from utils.read import(
 	csv_2_dict_va,
@@ -34,7 +35,7 @@ from sklearn.tree import DecisionTreeRegressor
 valence, arousal = csv_2_dict_va('csv/survery2dataMin1.csv')
 
 # calculate fetures for song in train set
-ids, feat = calc_chroma_features_dict('audio/full')
+ids, feat = calc_mfcc_features_dict('audio/full')
 best_avg = sys.maxint
 best_near = sys.maxint
 best_std = sys.maxint

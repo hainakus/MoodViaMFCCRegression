@@ -154,3 +154,54 @@ def calc_mfcc_features(path):
         i += 1
 
     return ids, fetures
+
+
+def feature_matrix_by_id(idx, feature):
+    '''
+    function from dict feature select rows
+    and concat 
+    it in new matrix using idx
+    '''
+
+    feats = np.array(feature[idx[0]])
+
+    for id in idx[1:]:
+        feats = np.vstack((feats, feature[id]))
+
+    return feats
+
+from random import shuffle
+
+
+def shufle_same(X, Yv, Ya, ids):
+    X_shuf = []
+    Yv_shuf = []
+    Ya_shuf = []
+    ids_shuf = []
+    index_shuf = range(len(Yv))
+    shuffle(index_shuf)
+    for i in index_shuf:
+        # print i
+        X_shuf.append(X[i])
+        Yv_shuf.append(Yv[i])
+        Ya_shuf.append(Ya[i])
+        ids_shuf.append(ids[i])
+        # print i
+
+    # print X.shape
+    # print len(Ya)
+
+    return X, Yv, Ya, ids_shuf
+
+
+def averagedist(xa, ya, xb, yb):
+    '''
+    calculate mean of distances
+    beetwen arrays of point
+    '''
+    sum = 0
+    for i in range(len(xa)):
+        a = np.array([xa[i], ya[i]])
+        b = np.array([xb[i], yb[i]])
+        sum += np.linalg.norm(a-b)
+    return sum/len(xa)

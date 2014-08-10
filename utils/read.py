@@ -141,3 +141,57 @@ def read_fake_chroma(path):
         i += 1
 
     return ids, features
+
+
+def mean_va(path):
+    '''
+    Function creates 2 dictionaries for valence and arousal
+    for each song in csv
+    key - song id
+    value - array of values
+    '''
+
+    print 'rendering csv file'
+
+    # read csv
+    ifile = open(path, "rb")
+    reader = csv.reader(ifile)
+
+    # dict: key => song id,
+    # value => array of valence (1.dict) arousal (2. dict)
+    val = []
+    aro = []
+    id = []
+
+    for row in reader:
+        id.append(int(row[81]))
+        v = 0
+        a = 0
+        count = 0
+
+        for i in range(82+20, 129, 2):
+            if float(row[i]) <= 1 and float(row[i+1]) <= 1:
+                v += float(row[i])
+                a += float(row[i+1])
+                count += 1
+
+        val.append(v/count)
+        aro.append(a/count)
+    return id, val, aro
+
+
+def read_csv_col(path, colfrom, colto):
+    '''
+    function reads columns colfrom:colto(included)
+    from csv file on path path
+    '''
+
+    ifile = open(path, "rb")
+    reader = csv.reader(ifile)
+
+    col_data = []
+
+    for row in reader:
+        #print row[colfrom:colto]
+        col_data.append([float(i) for i in row[colfrom:colto]])
+    return col_data

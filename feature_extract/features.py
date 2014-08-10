@@ -112,4 +112,27 @@ def calc_chroma_features_dict(path):
         i += 1
 
     return ids, features
+
+
+def calc_mfcc_features_dict(path):
+    '''
+    function calcuates shape features for all song in path
+    returns mean for each song and songs id
+    '''
+    print 'calcualting shape features for ' + path
+
+    ids = []
+    features = {}
+    i = 0
+
+    for filename in os.listdir(path):
+        key = int(filename[:3])
+        ids.append(key)
+        mfcc_feat = mfcc(os.path.join(path, filename))
+        # print fetures
+        features[key] = mfcc_feat
+        print i
+        i += 1
+
+    return ids, features
     
