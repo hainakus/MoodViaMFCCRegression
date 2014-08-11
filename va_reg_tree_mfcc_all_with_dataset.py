@@ -33,7 +33,7 @@ import numpy as np
 
 from sklearn.tree import DecisionTreeRegressor
 
-''' 
+'''
 regression tree for each response
 '''
 
@@ -83,7 +83,7 @@ listening = np.array(read_csv_col('csv/survery2dataMin1.csv', 12, 12))
 moodcolor = np.array(read_csv_col('csv/survery2dataMin1.csv', 19, 20))
 moodperception = np.array(read_csv_col('csv/survery2dataMin1.csv', 21, 40))
 presencemood = np.array(read_csv_col('csv/survery2dataMin1.csv', 41, 57))
-X = np.hstack((X, moodperception))
+X = np.hstack((X, presencemood))
 
 
 print "check 3"
