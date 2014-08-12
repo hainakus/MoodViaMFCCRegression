@@ -205,3 +205,5 @@ def averagedist(xa, ya, xb, yb):
         b = np.array([xb[i], yb[i]])
         sum += np.linalg.norm(a-b)
     return sum/len(xa)
+
+

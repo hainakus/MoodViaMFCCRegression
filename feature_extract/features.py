@@ -17,7 +17,7 @@ def load_files(path):
     return y, sr
 
 
-def mfcc(path):
+def mfcc(path, nmfcc):
     # Let's make and display a mel-scaled power (energy-squared) spectrogram
     # We use a small hop length of 64 here so that the
     # frames line up with the beat tracker example below.
@@ -30,7 +30,7 @@ def mfcc(path):
     # Convert to log scale (dB). We'll use the peak power as reference.
     log_S = logamplitude(S, ref_power=np.max)
 
-    mfcc_v = feature.mfcc(S=log_S, n_mfcc=20)
+    mfcc_v = feature.mfcc(S=log_S, n_mfcc=nmfcc)
 
     return np.sum(mfcc_v, axis=1)/mfcc_v.shape[1]
 
@@ -114,7 +114,7 @@ def calc_chroma_features_dict(path):
     return ids, features
 
 
-def calc_mfcc_features_dict(path):
+def calc_mfcc_features_dict(path, nmfcc):
     '''
     function calcuates shape features for all song in path
     returns mean for each song and songs id
@@ -128,7 +128,7 @@ def calc_mfcc_features_dict(path):
     for filename in os.listdir(path):
         key = int(filename[:3])
         ids.append(key)
-        mfcc_feat = mfcc(os.path.join(path, filename))
+        mfcc_feat = mfcc(os.path.join(path, filename), nmfcc)
         # print fetures
         features[key] = mfcc_feat
         print i

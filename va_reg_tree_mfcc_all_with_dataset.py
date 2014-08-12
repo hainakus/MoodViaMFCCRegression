@@ -6,7 +6,8 @@ from feature_extract.features import(
 from utils.read import(
     mean_va,
     csv_2_dict_va,
-    read_csv_col
+    read_csv_col,
+    read_feature_from_json
 )
 
 from utils.calc_utils import(
@@ -64,10 +65,9 @@ valence, arousal = csv_2_dict_va('csv/survery2dataMin1.csv')
     # 130/131 - color for song
     # ni 134:136 - HSV for song
 
-
-
 # calculate fetures for song in train set
-ids, feat = calc_mfcc_features_dict('audio/full')
+#ids, feat = calc_mfcc_features_dict('audio/full')
+feat = read_feature_from_json('features/mfcc_our_dataset_20.json')
 
 X = feature_matrix_by_id(all_ids, feat)
 Yv = all_val
@@ -83,8 +83,9 @@ listening = np.array(read_csv_col('csv/survery2dataMin1.csv', 12, 12))
 moodcolor = np.array(read_csv_col('csv/survery2dataMin1.csv', 19, 20))
 moodperception = np.array(read_csv_col('csv/survery2dataMin1.csv', 21, 40))
 presencemood = np.array(read_csv_col('csv/survery2dataMin1.csv', 41, 57))
-X = np.hstack((X, presencemood))
-
+colorperception = np.array(read_csv_col('csv/survery2dataMin1.csv', 58, 77))
+X = np.hstack((X, moodperception))
+X = np.hstack((X, listening))
 
 print "check 3"
 print X.shape
@@ -98,8 +99,8 @@ best_std = sys.maxint
 best_val = sys.maxint
 best_aro = sys.maxint
 
-for j in range(1, 4):
-    for i in range(100):
+for j in range(1, 2):
+    for i in range(200):
         X, Yv, Ya, all_ids = shufle_same(X, Yv, Ya, all_ids)
 
         # print "check 4"

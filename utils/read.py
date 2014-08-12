@@ -1,6 +1,7 @@
 import csv
 import numpy as np
 import os
+import json
 
 
 def csv_2_dict_va(path):
@@ -195,3 +196,17 @@ def read_csv_col(path, colfrom, colto):
         #print row[colfrom:colto]
         col_data.append([float(i) for i in row[colfrom:colto]])
     return col_data
+
+
+def read_feature_from_json(path):
+    '''
+    read json to dict
+    '''
+    with open(path, 'rb') as fp:
+        data = json.load(fp)
+
+    # convert keys from string to int
+    for key in data.keys():
+        data[int(key)] = data.pop(key)
+
+    return data
