@@ -150,6 +150,9 @@ def average_distance(valence_calc, arousal_calc, valence, arousal, ids):
     sum = 0
     for i in range(len(ids)):
         sum += math.sqrt(math.pow(valence_calc[i] - np.mean(valence[ids[i]]), 2) + math.pow(arousal_calc[i] - np.mean(arousal[ids[i]]), 2))
+        if (math.sqrt(math.pow(valence_calc[i] - np.mean(valence[ids[i]]), 2) + math.pow(arousal_calc[i] - np.mean(arousal[ids[i]]), 2))) > 0.8:
+            print ids[i]
+
 
     return sum/float(len(ids))
 

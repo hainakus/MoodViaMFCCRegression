@@ -2,7 +2,8 @@ import csv
 import numpy as np
 import os
 import json
-
+import colorsys
+from calc_utils import cart2polar
 
 def csv_2_dict_va(path):
     '''
@@ -37,6 +38,115 @@ def csv_2_dict_va(path):
                 aro[key].append(float(row[i+1]))
 
     return val, aro
+
+
+def csv_2_dict_va_polar(path):
+    '''
+    Function creates 2 dictionaries for valence and arousal
+    for each song in csv
+    key - song id
+    value - array of values
+    '''
+
+    print 'rendering csv file'
+
+    # read csv
+    ifile = open(path, "rb")
+    reader = csv.reader(ifile)
+
+    # dict: key => song id,
+    # value => array of valence (1.dict) arousal (2. dict)
+    r = {}
+    theta = {}
+
+    # parse csv
+    for row in reader:
+        # print row[81]
+        key = int(row[81])
+        if key not in r:
+            r[key] = []
+            theta[key] = []
+
+        for i in range(82+20, 129, 2):
+            if float(row[i]) <= 1 and float(row[i+1]) <= 1:
+                rr, ttheta = cart2polar(float(row[i]), float(row[i+1]))
+                r[key].append(rr)
+                theta[key].append(ttheta)
+
+    return r, theta
+
+
+def csv_2_dict_hsv(path):
+    '''
+    Function creates 2 dictionaries for valence and arousal
+    for each song in csv
+    key - song id
+    value - array of values
+    '''
+
+    print 'rendering csv file'
+
+    # read csv
+    ifile = open(path, "rb")
+    reader = csv.reader(ifile)
+
+    # dict: key => song id,
+    # value => array of valence (1.dict) arousal (2. dict)
+    h = {}
+    s = {}
+    v = {}
+
+    # parse csv
+    for row in reader:
+        # print row[81]
+        key = int(row[81])
+        if key not in h:
+            h[key] = []
+            s[key] = []
+            v[key] = []
+
+        h[key].append(float(row[132]))
+        s[key].append(float(row[133]))
+        v[key].append(float(row[134]))
+
+    return h, s, v
+
+
+def csv_2_dict_rgb(path):
+    '''
+    Function creates 2 dictionaries for valence and arousal
+    for each song in csv
+    key - song id
+    value - array of values
+    '''
+
+    print 'rendering csv file'
+
+    # read csv
+    ifile = open(path, "rb")
+    reader = csv.reader(ifile)
+
+    # dict: key => song id,
+    # value => array of valence (1.dict) arousal (2. dict)
+    r = {}
+    g = {}
+    b = {}
+
+    # parse csv
+    for row in reader:
+        # print row[81]
+        key = int(row[81])
+        if key not in r:
+            r[key] = []
+            g[key] = []
+            b[key] = []
+
+        red, green, blue = colorsys.hsv_to_rgb(float(row[132]), float(row[133]), float(row[134]))
+        r[key].append(red)
+        g[key].append(green)
+        b[key].append(blue)
+
+    return r, g, b
 
 
 def read_csv_song_features(path):
@@ -179,6 +289,178 @@ def mean_va(path):
         val.append(v/count)
         aro.append(a/count)
     return id, val, aro
+
+
+def uniform_va_hsv(path):
+    '''
+    Function returns va and hsv for this responses where
+    only one mood was selected 
+    '''
+
+    print 'rendering csv file'
+
+    # read csv
+    ifile = open(path, "rb")
+    reader = csv.reader(ifile)
+
+    # dict: key => song id,
+    # value => array of valence (1.dict) arousal (2. dict)
+    val = []
+    aro = []
+    id = []
+    h = []
+    s = [] 
+    v = []
+
+    for row in reader:
+        va=0
+        ar=0
+        count = 0
+
+        for i in range(82+20, 129, 2):
+            if float(row[i]) <= 1 and float(row[i+1]) <= 1:
+                va = float(row[i])
+                ar = float(row[i+1])
+                count += 1
+
+        if count == 1:                   
+            val.append(va)
+            aro.append(ar)
+            id.append(int(row[81]))
+            h.append(float(row[132]))
+            s.append(float(row[133]))
+            v.append(float(row[134]))
+    return id, val, aro, h, s, v
+
+
+def uniform_va_rgb(path):
+    '''
+    Function returns va and rgb for this responses where
+    only one mood was selected 
+    '''
+
+    print 'rendering csv file'
+
+    # read csv
+    ifile = open(path, "rb")
+    reader = csv.reader(ifile)
+
+    # dict: key => song id,
+    # value => array of valence (1.dict) arousal (2. dict)
+    val = []
+    aro = []
+    id = []
+    r = []
+    g = [] 
+    b = []
+
+    for row in reader:
+        va=0
+        ar=0
+        count = 0
+
+        for i in range(82+20, 129, 2):
+            if float(row[i]) <= 1 and float(row[i+1]) <= 1:
+                va = float(row[i])
+                ar = float(row[i+1])
+                count += 1
+
+        if count == 1:                   
+            val.append(va)
+            aro.append(ar)
+            id.append(int(row[81]))
+            red, green, blue = colorsys.hsv_to_rgb(float(row[132]), float(row[133]), float(row[134]))
+            r.append(red)
+            g.append(green)
+            b.append(blue)
+    return id, val, aro, r, g, b
+
+
+def uniform_va_hsv_polar(path):
+    '''
+    Function returns va and hsv for this responses where
+    only one mood was selected 
+    '''
+
+    print 'rendering csv file'
+
+    # read csv
+    ifile = open(path, "rb")
+    reader = csv.reader(ifile)
+
+    # dict: key => song id,
+    # value => array of valence (1.dict) arousal (2. dict)
+    rrr = []
+    tetha = []
+    id = []
+    h = []
+    s = [] 
+    v = []
+
+    for row in reader:
+        rr=0
+        ttetha=0
+        count = 0
+
+        for i in range(82+20, 129, 2):
+            if float(row[i]) <= 1 and float(row[i+1]) <= 1:
+                va = float(row[i])
+                ar = float(row[i+1])
+                rr, ttheta = cart2polar(va,ar)
+                count += 1
+
+        if count == 1:                   
+            tetha.append(ttheta)
+            rrr.append(rr)
+            id.append(int(row[81]))
+            h.append(float(row[132]))
+            s.append(float(row[133]))
+            v.append(float(row[134]))
+    return id, rrr, tetha, h, s, v
+
+
+def uniform_va_rgb_polar(path):
+    '''
+    Function returns va and rgb for this responses where
+    only one mood was selected 
+    '''
+
+    print 'rendering csv file'
+
+    # read csv
+    ifile = open(path, "rb")
+    reader = csv.reader(ifile)
+
+    # dict: key => song id,
+    # value => array of valence (1.dict) arousal (2. dict)
+    rrr = []
+    tetha = []
+    id = []
+    r = []
+    g = [] 
+    b = []
+
+    for row in reader:
+        rr=0
+        ttetha=0
+        count = 0
+
+        for i in range(82+20, 129, 2):
+            if float(row[i]) <= 1 and float(row[i+1]) <= 1:
+                va = float(row[i])
+                ar = float(row[i+1])
+                rr, ttheta = cart2polar(va,ar)
+                count += 1
+
+        if count == 1:                   
+            rrr.append(rr)
+            tetha.append(ttheta)
+            id.append(int(row[81]))
+            red, green, blue = colorsys.hsv_to_rgb(float(row[132]), float(row[133]), float(row[134]))
+            r.append(red)
+            g.append(green)
+            b.append(blue)
+    return id, rrr, tetha, r, g, b
 
 
 def read_csv_col(path, colfrom, colto):

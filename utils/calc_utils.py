@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import os
+import cmath
 
 from librosa import(
     feature,
@@ -28,7 +29,7 @@ def regression(features, valence_m, arousal_m):
     '''
     calculates c and n with regression for both
     '''
-    print 'regression'
+    #print 'regression'
     x = np.array(features)
     y_v = np.array(valence_m)
     y_a = np.array(arousal_m)
@@ -39,6 +40,19 @@ def regression(features, valence_m, arousal_m):
     return X_v, X_a
 
 
+def regression_one(x, y):
+    '''
+    calculates c and n with regression for both
+    '''
+    #print 'regression'
+    x = np.array(x)
+    y = np.array(y)
+    
+    X = np.linalg.lstsq(x, y)[0]
+
+    return X
+
+
 def average_distance_va(valence_calc, arousal_calc, valence, arousal, ids):
     '''
     calculates average distace from mesured averages and calcualted averages
@@ -46,6 +60,28 @@ def average_distance_va(valence_calc, arousal_calc, valence, arousal, ids):
     sum = 0
     for i in range(len(ids)):
         sum += math.sqrt(math.pow(valence_calc[i] - np.mean(valence[ids[i]]), 2) + math.pow(arousal_calc[i] - np.mean(arousal[ids[i]]), 2))
+
+    return sum/float(len(ids))
+
+def average_vector_dist(vec1, dic, ids):
+    '''
+    calculates average distace between vector and dict data for vector
+    '''
+    sum = 0
+    for i in range(len(ids)):
+        sum += abs(vec1[i] - np.mean(dic[ids[i]]))
+
+    return sum/float(len(ids))
+
+
+def average_vector_dist_polar(vec1, dic, ids):
+    '''
+    calculates average distace between vector and dict data for vector
+    '''
+    sum = 0
+    for i in range(len(ids)):
+        dist1 = abs((vec1[i] % (2 * math.pi)) - np.mean(dic[ids[i]]))
+        sum += dist1 if dist1 < math.pi else (2 * math.pi - dist1)
 
     return sum/float(len(ids))
 
@@ -173,25 +209,19 @@ def feature_matrix_by_id(idx, feature):
 from random import shuffle
 
 
-def shufle_same(X, Yv, Ya, ids):
-    X_shuf = []
-    Yv_shuf = []
-    Ya_shuf = []
-    ids_shuf = []
-    index_shuf = range(len(Yv))
+def shufle_same(*args):
+    
+    index_shuf = range(len(args[0]))
     shuffle(index_shuf)
-    for i in index_shuf:
-        # print i
-        X_shuf.append(X[i])
-        Yv_shuf.append(Yv[i])
-        Ya_shuf.append(Ya[i])
-        ids_shuf.append(ids[i])
-        # print i
+    results = []
+    for vec in args:
+        vec_shaf = []
 
-    # print X.shape
-    # print len(Ya)
-
-    return X, Yv, Ya, ids_shuf
+        for i in index_shuf:
+            vec_shaf.append(vec[i])
+        results.append(vec_shaf) 
+          
+    return results
 
 
 def averagedist(xa, ya, xb, yb):
@@ -207,3 +237,9 @@ def averagedist(xa, ya, xb, yb):
     return sum/len(xa)
 
 
+def cart2polar(x, y):
+    r = np.sqrt(x**2 + y**2)
+    theta = np.arctan2(y, x)
+
+
+    return cmath.polar(complex(x,y))
