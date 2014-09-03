@@ -86,6 +86,34 @@ def average_vector_dist_polar(vec1, dic, ids):
     return sum/float(len(ids))
 
 
+def average_distance_to_nearest_va(valence_calc, arousal_calc, valence, arousal, ids):
+    '''
+    calculates average distace from nearest value and calcualted averages
+    '''
+    sum = 0
+    for i in range(len(ids)):
+        min_dist = 9 # no distance biger than this
+        for j in range(len(valence[ids[i]])):
+            dist = math.sqrt(math.pow(valence_calc[i] - valence[ids[i]][j], 2) + math.pow(arousal_calc[i] - arousal[ids[i]][j], 2))
+            min_dist = dist if dist < min_dist else min_dist
+        sum += min_dist
+
+    return sum/float(len(ids))
+
+
+def average_distance_std_va(valence_calc, arousal_calc, valence, arousal, ids):
+    '''
+    calculates average distace from mesured averages and calcualted averages
+    '''
+    sum = 0
+    for i in range(len(ids)):
+        stdev = (np.std(valence[ids[i]]) + np.std(arousal[ids[i]])) / 2
+        adist = math.sqrt(math.pow(valence_calc[i] - np.mean(valence[ids[i]]), 2) + math.pow(arousal_calc[i] - np.mean(arousal[ids[i]]), 2))
+        sum += adist/stdev
+
+    return sum/float(len(ids))
+
+
 def valence_distance_va(valence_calc, arousal_calc, valence, arousal, ids):
     '''
     calculates average distace from mesured averages and calcualted averages

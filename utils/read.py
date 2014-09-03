@@ -462,6 +462,39 @@ def uniform_va_rgb_polar(path):
             b.append(blue)
     return id, rrr, tetha, r, g, b
 
+def seperate_va(path):
+    '''
+    Function creates 2 dictionaries for valence and arousal
+    for each va in csv
+    key - song id
+    value - array of values
+    '''
+
+    print 'rendering csv file'
+
+    # read csv
+    ifile = open(path, "rb")
+    reader = csv.reader(ifile)
+
+    # dict: key => song id,
+    # value => array of valence (1.dict) arousal (2. dict)
+    val = []
+    aro = []
+    id = []
+    rows = []
+    index = 0
+
+    for row in reader:
+
+        for i in range(82+20, 129, 2):
+            if float(row[i]) <= 1 and float(row[i+1]) <= 1:
+                id.append(int(row[81]))
+                val.append(float(row[i]))
+                aro.append(float(row[i+1]))
+                rows.append(index)
+        index += 1
+    return id, val, aro, rows
+
 
 def read_csv_col(path, colfrom, colto):
     '''
@@ -477,6 +510,22 @@ def read_csv_col(path, colfrom, colto):
     for row in reader:
         #print row[colfrom:colto]
         col_data.append([float(i) for i in row[colfrom:colto]])
+    return col_data
+
+
+def read_csv_col_with_row(path, colfrom, colto, rows):
+    '''
+    function reads columns colfrom:colto(included)
+    from csv file on path path
+    '''
+
+    ifile = open(path, "rb")
+    reader = list(csv.reader(ifile))
+
+    col_data = []
+
+    for row in rows:
+        col_data.append([float(i) for i in reader[row][colfrom:colto]])
     return col_data
 
 
